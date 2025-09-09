@@ -80,4 +80,4 @@ temp/
 # Model checkpoints and weights
 checkpoints/
 models/
-weights/
+weights/qlora_modules/
