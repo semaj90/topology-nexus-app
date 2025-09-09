@@ -1,0 +1,27 @@
+{
+  "name": "topology-nexus-app",
+  "version": "1.0.0",
+  "description": "contextual engineering, train on different topologies, swap them out, need gpu lib nn too handle that. trainer stuff testing",
+  "main": "src/qlora/memory_manager.js",
+  "scripts": {
+    "test": "node tests/test_qlora.js",
+    "studio": "python src/studio/studio.py",
+    "dev": "node src/qlora/memory_manager.js",
+    "lint": "echo \"No linting configured yet\"",
+    "build": "echo \"No build process needed for this project\""
+  },
+  "keywords": ["qlora", "topology", "contextual-engineering", "semantic-search", "machine-learning"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "python": ">=3.8.0"
+  }
+}

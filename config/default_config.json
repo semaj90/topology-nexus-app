@@ -1,0 +1,43 @@
+{
+  "scraper": {
+    "delay": 1.0,
+    "max_retries": 3,
+    "timeout": 30,
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (compatible; TopologyNexus/1.0)"
+    }
+  },
+  "semantic": {
+    "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+    "chunk_size": 1000,
+    "chunk_overlap": 200,
+    "embedding_cache": true
+  },
+  "qlora": {
+    "max_memory_mb": 512,
+    "compression_ratio": 0.1,
+    "cache_hit_threshold": 5,
+    "auto_unload": true
+  },
+  "trainer": {
+    "default_architecture": "transformer",
+    "learning_rate": 1e-4,
+    "batch_size": 16,
+    "epochs": 3,
+    "weight_decay": 0.01,
+    "lora_rank": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.1
+  },
+  "studio": {
+    "data_dir": "data",
+    "output_dir": "qlora_modules",
+    "auto_save": true,
+    "max_datasets": 10
+  },
+  "gpu": {
+    "use_cuda": true,
+    "mixed_precision": false,
+    "memory_fraction": 0.8
+  }
+}
