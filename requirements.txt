@@ -14,3 +14,7 @@ numpy>=1.24.0
 pandas>=2.0.0
 jsonlines>=4.0.0
 tqdm>=4.66.0
+# Database integration dependencies
+psycopg2-binary>=2.9.0
+minio>=7.2.0
+redis>=5.0.0

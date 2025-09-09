@@ -7,18 +7,32 @@
     "test": "node tests/test_qlora.js",
     "studio": "python src/studio/studio.py",
     "dev": "node src/qlora/memory_manager.js",
+    "api": "node examples/nodejs/api-example.js",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "example:pg": "node examples/nodejs/pg-example.js",
+    "example:minio": "node examples/nodejs/minio-example.js",
+    "example:couchdb": "node examples/nodejs/couchdb-example.js",
     "lint": "echo \"No linting configured yet\"",
     "build": "echo \"No build process needed for this project\""
   },
-  "keywords": ["qlora", "topology", "contextual-engineering", "semantic-search", "machine-learning"],
+  "keywords": ["qlora", "topology", "contextual-engineering", "semantic-search", "machine-learning", "postgresql", "minio", "couchdb"],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.0",
+    "minio": "^7.1.3",
+    "nano": "^10.1.2",
     "fs": "^0.0.1-security",
     "path": "^0.12.7"
   },
   "devDependencies": {
     "jest": "^29.7.0"
+  },
+  "optionalDependencies": {
+    "redis": "^4.6.0"
   },
   "engines": {
     "node": ">=14.0.0",

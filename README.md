@@ -11,6 +11,8 @@ A comprehensive platform for contextual engineering that fetches webpages, parse
 - **Topology Training**: Train on different neural network topologies (transformer, graph, hierarchical, hybrid)
 - **GPU Support**: Neural network operations with CUDA support for training and inference
 - **Contextual Prompting**: Dynamic context selection based on semantic similarity
+- **Multi-Database Architecture**: PostgreSQL, MinIO, and CouchDB integration with Docker Compose
+- **RESTful API**: Complete API endpoints for all functionality with Node.js and Python examples
 
 ## Architecture
 
@@ -21,10 +23,50 @@ A comprehensive platform for contextual engineering that fetches webpages, parse
 │   ├── qlora/           # QLoRA memory management (JavaScript)
 │   ├── studio/          # Interactive testing environment
 │   └── trainer/         # Topology training and GPU operations
+├── examples/             # Integration examples
+│   ├── nodejs/          # Node.js database integration examples
+│   └── python/          # Python database integration examples
+├── docker/              # Docker configuration files
 ├── config/              # Configuration files
 ├── data/               # Data storage and datasets
 └── tests/              # Test suites
 ```
+
+## Docker Compose Setup
+
+### Quick Start with Databases
+
+1. **Start all services (PostgreSQL, MinIO, CouchDB):**
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   pip install -r requirements.txt
+   ```
+
+3. **Test database connections:**
+   ```bash
+   npm run example:pg     # Test PostgreSQL
+   npm run example:minio  # Test MinIO
+   npm run example:couchdb # Test CouchDB
+   ```
+
+4. **Start API server:**
+   ```bash
+   npm run api
+   ```
+
+### Service Access
+
+- **PostgreSQL**: localhost:5432 (nexus/changeme)
+- **MinIO Console**: http://localhost:9001 (minioadmin/minioadmin)
+- **CouchDB Admin**: http://localhost:5984/_utils (admin/changeme)
+- **API Documentation**: http://localhost:3000/api
+
+For detailed setup instructions, see [DOCKER_SETUP.md](DOCKER_SETUP.md).
 
 ## Installation
 
@@ -213,6 +255,74 @@ The QLoRA system automatically manages memory by:
 4. **Training**: Fine-tune topologies on domain-specific data
 5. **Deployment**: Load relevant modules contextually for inference
 6. **Querying**: Use semantic similarity for context retrieval
+
+## Database Integration
+
+The Topology Nexus App integrates three complementary databases:
+
+### PostgreSQL - Relational Data
+- **Users, topologies, modules, and training results**
+- **Semantic chunks with vector embeddings**
+- **ACID compliance for critical data integrity**
+
+```python
+from examples.python.pg_example import TopologyDB
+
+with TopologyDB() as db:
+    user = db.create_user('scientist', 'scientist@example.com')
+    topology = db.create_topology('my-transformer', 'Custom model', 'transformer', user['id'])
+    results = db.save_training_results(topology['id'], {...}, [0.8, 0.3, 0.1], 0.94, 5)
+```
+
+### MinIO - Object Storage  
+- **Model files, datasets, logs, and artifacts**
+- **S3-compatible API with bucket organization**
+- **Efficient large file handling and presigned URLs**
+
+```javascript
+const { TopologyStorage } = require('./examples/nodejs/minio-example');
+
+const storage = new TopologyStorage();
+await storage.uploadModel('my-model', modelData, {version: '1.0', accuracy: 0.94});
+const url = await storage.getPresignedUrl('models', 'my-model.json', 3600);
+```
+
+### CouchDB - Document Storage
+- **Engineering context, annotations, and experiments**  
+- **Flexible schema for evolving metadata**
+- **Full-text search and view-based queries**
+
+```python
+from examples.python.couchdb_example import TopologyContext
+
+context = TopologyContext()
+context.add_context('insight', 'Model shows attention bias in layer 3', 'topology-123')
+experiments = context.get_experiments_by_topology('topology-123')
+```
+
+### API Integration
+
+Complete RESTful API with all database operations:
+
+```bash
+# Start API server
+npm run api
+
+# Create topology with automatic context logging
+curl -X POST http://localhost:3000/api/topologies \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-model", "architecture": "transformer", "created_by": 1}'
+
+# Upload model to MinIO  
+curl -X POST http://localhost:3000/api/models \
+  -H "Content-Type: application/json" \
+  -d '{"name": "trained-v1", "model_data": {...}}'
+
+# Search across all context
+curl "http://localhost:3000/api/context/search?q=overfitting&limit=10"
+```
+
+For detailed integration examples, see [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md).
 
 ## Performance Tips
 
