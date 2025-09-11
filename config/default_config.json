@@ -39,5 +39,57 @@
     "use_cuda": true,
     "mixed_precision": false,
     "memory_fraction": 0.8
+  },
+  "databases": {
+    "postgres": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "topology",
+      "user": "nexus",
+      "password": "changeme",
+      "max_connections": 10,
+      "idle_timeout_ms": 30000,
+      "connection_timeout_ms": 2000
+    },
+    "minio": {
+      "endpoint": "localhost:9000",
+      "access_key": "minioadmin",
+      "secret_key": "minioadmin",
+      "secure": false,
+      "buckets": {
+        "models": "topology-models",
+        "datasets": "topology-datasets",
+        "logs": "topology-logs",
+        "artifacts": "topology-artifacts",
+        "checkpoints": "topology-checkpoints"
+      }
+    },
+    "couchdb": {
+      "base_url": "http://localhost:5984",
+      "username": "admin",
+      "password": "changeme",
+      "databases": {
+        "context": "topology-context",
+        "annotations": "topology-annotations",
+        "sessions": "topology-sessions",
+        "experiments": "topology-experiments"
+      }
+    },
+    "redis": {
+      "host": "localhost",
+      "port": 6379,
+      "password": null,
+      "db": 0,
+      "ttl": 3600
+    }
+  },
+  "api": {
+    "port": 3000,
+    "cors_enabled": true,
+    "rate_limit": {
+      "window_ms": 900000,
+      "max_requests": 100
+    },
+    "body_limit": "50mb"
   }
 }
