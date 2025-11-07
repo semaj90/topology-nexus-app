@@ -9,15 +9,19 @@ import sys
 import os
 import json
 import logging
+from pathlib import Path
 from typing import List, Dict
 
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.scraper.web_scraper import WebScraper
-from src.semantic.text_processor import SemanticProcessor, process_webpage_data
+from src.semantic.text_processor import process_webpage_data
 from src.trainer.topology_trainer import TopologyTrainer, DEFAULT_TOPOLOGIES
 from src.studio.studio import TopologyNexusStudio
+from src.qlora.dataset_builder import DatasetBuilder
+from src.qlora.model_converter import convert_model_pipeline
+from src.qlora.training_spec import QLoRATrainingSpec
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -171,6 +175,24 @@ def main():
     # Demo command
     demo_parser = subparsers.add_parser('demo', help='Run complete demo pipeline')
     demo_parser.add_argument('urls', nargs='+', help='URLs for demo')
+
+    dataset_parser = subparsers.add_parser('dataset', help='Build a JSONL dataset from local documents')
+    dataset_parser.add_argument('output', help='Output JSONL file')
+    dataset_parser.add_argument('inputs', nargs='+', help='Input document paths (.txt/.md/.html/.json/.jsonl)')
+    dataset_parser.add_argument('--chunk-size', type=int, default=1024, help='Maximum characters per chunk')
+    dataset_parser.add_argument('--overlap', type=int, default=200, help='Characters of overlap between chunks')
+
+    convert_parser = subparsers.add_parser('convert', help='Convert checkpoints to safetensors and TensorRT engines')
+    convert_parser.add_argument('checkpoint', help='Path to PyTorch checkpoint file (.bin/.pt)')
+    convert_parser.add_argument('output_dir', help='Directory to store converted artefacts')
+    convert_parser.add_argument('--config', help='Optional TensorRT-LLM network config JSON file')
+
+    qlora_spec_parser = subparsers.add_parser('qlora-spec', help='Generate a QLoRA training configuration stub')
+    qlora_spec_parser.add_argument('base_model', help='Base model identifier (local path or Hugging Face id)')
+    qlora_spec_parser.add_argument('dataset_path', help='Path to JSONL dataset for training')
+    qlora_spec_parser.add_argument('output_dir', help='Directory to place adapter outputs and config')
+    qlora_spec_parser.add_argument('--tokenizer', help='Optional tokenizer identifier')
+    qlora_spec_parser.add_argument('--embedding-model', default='embeddinggemma:latest', help='Embedding model for RAG workflows')
     
     args = parser.parse_args()
     
@@ -192,7 +214,34 @@ def main():
         
         elif args.command == 'demo':
             demo_pipeline(args.urls)
-        
+
+        elif args.command == 'dataset':
+            builder = DatasetBuilder(chunk_size=args.chunk_size, overlap=args.overlap)
+            output = builder.build_jsonl([Path(p) for p in args.inputs], Path(args.output))
+            print(f"Dataset written to {output}")
+
+        elif args.command == 'convert':
+            summary = convert_model_pipeline(Path(args.checkpoint), Path(args.output_dir), config_path=Path(args.config) if args.config else None)
+            print(f"Safetensors: {summary.safetensors_path}")
+            if summary.engine_plan_path:
+                print(f"TensorRT engine: {summary.engine_plan_path}")
+            if summary.notes:
+                print(json.dumps(summary.notes, indent=2))
+
+        elif args.command == 'qlora-spec':
+            output_dir = Path(args.output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            spec = QLoRATrainingSpec(
+                base_model=args.base_model,
+                dataset_path=Path(args.dataset_path),
+                output_dir=output_dir,
+                tokenizer_name=args.tokenizer,
+                embedding_model=args.embedding_model,
+            )
+            spec_path = output_dir / 'training_spec.json'
+            spec.write(spec_path)
+            print(f"QLoRA training spec written to {spec_path}")
+
     except KeyboardInterrupt:
         logger.info("Operation cancelled by user")
     except Exception as e:
