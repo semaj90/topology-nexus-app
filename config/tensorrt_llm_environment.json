@@ -1,0 +1,22 @@
+{
+  "python": {
+    "version": "3.12",
+    "path": "C:/Python312/python.exe",
+    "virtual_env": "C:/Users/james/Videos/deeds-web-app/tensorrt_llm_env"
+  },
+  "cuda": {
+    "version": "12.6",
+    "visible_devices": "0",
+    "architecture": "sm_86",
+    "gpu_name": "RTX_3060_Ti",
+    "gpu_memory_gb": 8
+  },
+  "dependencies": {
+    "tensorrt_llm": ">=0.9",
+    "torch": ">=2.1",
+    "transformers": ">=4.36",
+    "peft": ">=0.7",
+    "bitsandbytes": ">=0.41"
+  },
+  "notes": "Install CUDA 12.6 drivers on the Windows host and expose them to WSL2. Activate the listed Python environment before launching the Tauri desktop app to enable TensorRT engine generation."
+}

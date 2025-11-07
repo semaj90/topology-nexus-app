@@ -7,6 +7,7 @@ A comprehensive platform for contextual engineering that fetches webpages, parse
 - **Web Scraping & Parsing**: Fetches webpages and converts them to structured JSON/JSONL format
 - **Semantic Processing**: Uses LangChain and semantic splitting for intelligent text understanding
 - **QLoRA Modules**: Memory-efficient loading/unloading of distilled modules based on user queries
+- **Desktop Studio**: Cross-platform SvelteKit + Tauri desktop application for dataset curation, embedding generation, and TensorRT conversions
 - **Interactive Studio**: Testing environment for features and mini-dataset creation
 - **Topology Training**: Train on different neural network topologies (transformer, graph, hierarchical, hybrid)
 - **GPU Support**: Neural network operations with CUDA support for training and inference
@@ -107,10 +108,35 @@ npm run studio
 python main.py scrape https://example.com --output processed_data.json
 ```
 
+### 4. Build Desktop Datasets
+```bash
+python main.py dataset data/my_dataset.jsonl docs/*.md --chunk-size 800 --overlap 120
+```
+
+### 5. Generate QLoRA Training Spec
+```bash
+python main.py qlora-spec meta-llama/Llama-3-8b data/my_dataset.jsonl artifacts/qlora-run
+```
+
+### 6. Convert Checkpoints to TensorRT Engines
+```bash
+python main.py convert checkpoints/lora_adapter.pt artifacts/engine --config config/tensorrt_llm_environment.json
+```
+
 ### 4. Train a Topology
 ```bash
 python main.py train transformer processed_data.json --epochs 5
 ```
+
+### 5. Launch the Desktop Studio (WSL2 + Windows)
+
+```bash
+cd desktop
+npm install
+npm run tauri
+```
+
+The Tauri shell invokes the Python toolchain inside WSL2 for dataset creation, adapter conversion, and TensorRT plan generation. Configure the Python interpreter with the `PYTHON_EXECUTABLE` environment variable if it is not available as `python` in your PATH.
 
 ## Components
 

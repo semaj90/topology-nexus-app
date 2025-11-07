@@ -1,0 +1,4 @@
+docs/llms/desktop-overview.md | How the Tauri + SvelteKit desktop orchestrates dataset and training workflows. | tags=desktop,sveltekit,tauri
+docs/llms/python-pipeline.md | Python modules for dataset preparation, embeddings, QLoRA training, and conversion. | tags=python,qlora
+docs/llms/configuration-guide.json | Runtime requirements for TensorRT-LLM, Ollama, and QLoRA exports. | tags=configuration,cuda,tensorrt
+docs/llms/embedding-tasks.jsonl | Reference tasks that feed RAG ingestion and adapter training workflows. | tags=rag,embeddings
