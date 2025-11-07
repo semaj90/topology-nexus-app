@@ -1,0 +1,4 @@
+{"task": "dataset_chunking", "module": "src/qlora/dataset_builder.py", "description": "Convert uploaded documents into JSONL with chunk metadata."}
+{"task": "ollama_embedding", "module": "src/qlora/ollama_embeddings.py", "description": "Submit dataset rows to Ollama embeddinggemma:latest and persist responses."}
+{"task": "qlora_training", "module": "src/qlora/run_qlora.py", "description": "Launch adapter fine-tuning using generated training specifications."}
+{"task": "model_conversion", "module": "src/qlora/model_converter.py", "description": "Convert adapters and checkpoints into TensorRT-LLM .plan engines or safetensors."}

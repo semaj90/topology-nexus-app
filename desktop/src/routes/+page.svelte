@@ -3,6 +3,13 @@
     buildDataset,
     convertCheckpoint,
     embedTexts,
+    refreshSemanticIndex,
+    type ConversionSummary,
+    type EmbeddingResult,
+    type SemanticIndexEntry
+  } from '$lib/api';
+  import { initialiseSemanticIndex, runSemanticSearch, semanticIndexStore } from '$lib/search';
+  import { onDestroy, onMount } from 'svelte';
     type ConversionSummary,
     type EmbeddingResult
   } from '$lib/api';
@@ -23,6 +30,34 @@
   let conversionConfig = '';
   let conversionSummary: ConversionSummary | null = null;
   let conversionStatus = '';
+
+  let semanticStatus = '';
+  let searchQuery = '';
+  let searchResults: SemanticIndexEntry[] = [];
+  let semanticRecords: SemanticIndexEntry[] = [];
+  const unsubscribe = semanticIndexStore.subscribe((records) => {
+    semanticRecords = records;
+    if (!searchQuery.trim()) {
+      searchResults = records.slice(0, 5);
+    }
+  });
+
+  onDestroy(() => unsubscribe());
+
+  onMount(async () => {
+    semanticStatus = 'Loading semantic index...';
+    try {
+      const records = await initialiseSemanticIndex();
+      semanticStatus = `Indexed ${records.length} documentation chunks from Qdrant/PGVector exports.`;
+      searchResults = records.slice(0, 5);
+    } catch (error) {
+      semanticStatus = `Unable to load semantic index: ${error}`;
+    }
+  });
+
+  $: searchResults = searchQuery.trim()
+    ? runSemanticSearch(searchQuery)
+    : semanticRecords.slice(0, Math.min(5, semanticRecords.length));
 
   async function handleDatasetBuild() {
     if (!datasetInputs || datasetInputs.length === 0) {
@@ -90,6 +125,22 @@
       conversionStatus = 'Conversion complete.';
     } catch (error) {
       conversionStatus = `Failed: ${error}`;
+    }
+  }
+
+  async function handleIndexRefresh() {
+    semanticStatus = 'Refreshing semantic index...';
+    try {
+      const count = await refreshSemanticIndex();
+      const records = await initialiseSemanticIndex();
+      semanticStatus = `Semantic index refreshed with ${count} entries.`;
+      if (searchQuery.trim()) {
+        searchResults = runSemanticSearch(searchQuery);
+      } else {
+        searchResults = records.slice(0, 5);
+      }
+    } catch (error) {
+      semanticStatus = `Failed to refresh index: ${error}`;
     }
   }
 </script>
@@ -178,6 +229,47 @@
       </div>
     {/if}
   </section>
+
+  <section>
+    <h2>4. Semantic Search & Indexed Memory</h2>
+    <p>
+      Indexed DB storage mirrors XRabbit's server-side memory queue so Fuse.js can perform low-latency semantic
+      lookups across the LangExtract corpus tagged in Qdrant/PGVector.
+    </p>
+    <div class="row search-bar">
+      <input
+        type="text"
+        bind:value={searchQuery}
+        placeholder="Search TypeScript, Drizzle ORM, UnoCSS snippets..."
+      />
+      <button on:click|preventDefault={handleIndexRefresh}>Refresh Index</button>
+    </div>
+    <p class="status">{semanticStatus}</p>
+
+    {#if searchResults.length}
+      <ul class="search-results">
+        {#each searchResults as result}
+          <li class="result-item">
+            <h3>{result.title}</h3>
+            {#if result.topic}
+              <p class="topic">Topic: {result.topic}</p>
+            {/if}
+            <p>{result.content}</p>
+            <div class="tags">
+              {#each result.tags.slice(0, 6) as tag}
+                <span class="tag">{tag}</span>
+              {/each}
+            </div>
+            {#if result.score !== undefined}
+              <p class="score">Relevance: {(1 - (result.score ?? 0)).toFixed(3)}</p>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    {:else if searchQuery.trim()}
+      <p class="status">No semantic matches for "{searchQuery}".</p>
+    {/if}
+  </section>
 </main>
 
 <style>
@@ -248,6 +340,58 @@
 
   .row label {
     flex: 1;
+  }
+
+  .search-bar {
+    align-items: center;
+  }
+
+  .search-bar input {
+    flex: 1;
+  }
+
+  .search-results {
+    list-style: none;
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 0;
+  }
+
+  .result-item {
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.6);
+  }
+
+  .result-item h3 {
+    margin-bottom: 0.5rem;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .tag {
+    background: rgba(99, 102, 241, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+  }
+
+  .topic {
+    font-size: 0.85rem;
+    color: #fbbf24;
+  }
+
+  .score {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    color: #38bdf8;
   }
 
   .status {

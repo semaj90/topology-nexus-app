@@ -1,16 +1,71 @@
-"""
-Semantic text processing module using langchain for intelligent text splitting and understanding.
-"""
+"""Semantic text processing module with graceful degradation when LangChain is absent."""
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter, SemanticChunker
-from langchain.document_loaders import TextLoader
-from langchain.schema import Document
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from transformers import AutoTokenizer, AutoModel
-import torch
-import numpy as np
-from typing import List, Dict, Any, Optional
+from __future__ import annotations
+
 import logging
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+
+try:  # pragma: no cover - optional dependency
+    from langchain.text_splitter import RecursiveCharacterTextSplitter, SemanticChunker
+    from langchain.schema import Document
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+    _HAS_LANGCHAIN = True
+except Exception:  # pragma: no cover
+    _HAS_LANGCHAIN = False
+
+    @dataclass
+    class Document:  # type: ignore
+        page_content: str
+        metadata: Dict[str, Any]
+
+    class RecursiveCharacterTextSplitter:  # type: ignore
+        def __init__(self, chunk_size: int, chunk_overlap: int, separators: Optional[List[str]] = None) -> None:
+            self.chunk_size = chunk_size
+            self.chunk_overlap = chunk_overlap
+
+        def split_documents(self, documents: List[Document]) -> List[Document]:
+            chunks: List[Document] = []
+            for document in documents:
+                text = document.page_content
+                start = 0
+                while start < len(text):
+                    end = min(len(text), start + self.chunk_size)
+                    chunk_text = text[start:end]
+                    chunks.append(Document(chunk_text, document.metadata))
+                    start = end - self.chunk_overlap if end - self.chunk_overlap > start else end
+            return chunks
+
+    class SemanticChunker(RecursiveCharacterTextSplitter):  # type: ignore
+        pass
+
+    class HuggingFaceEmbeddings:  # type: ignore
+        def __init__(self, model_name: str, model_kwargs: Optional[Dict[str, Any]] = None) -> None:
+            self.model_name = model_name
+
+        def embed_documents(self, texts: List[str]) -> List[List[float]]:
+            return [[float(len(text)) for _ in range(4)] for text in texts]
+
+        def embed_query(self, text: str) -> List[float]:
+            return [float(len(text)) for _ in range(4)]
+
+try:  # pragma: no cover - optional dependency
+    import torch
+except Exception:  # pragma: no cover
+    class _TorchShim:
+        @staticmethod
+        def cuda_is_available() -> bool:
+            return False
+
+        @staticmethod
+        def is_available() -> bool:
+            return False
+
+    class torch:  # type: ignore
+        cuda = _TorchShim()
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -24,6 +24,11 @@ import logging
 import re
 
 import jsonlines
+
+try:  # pragma: no cover - optional dependency
+    from bs4 import BeautifulSoup  # type: ignore
+except Exception:  # pragma: no cover
+    from scraper.web_scraper import BeautifulSoup  # type: ignore
 from bs4 import BeautifulSoup
 
 

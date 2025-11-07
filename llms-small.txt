@@ -1,0 +1,53 @@
+# docs/llms/desktop-overview.md
+How the Tauri + SvelteKit desktop orchestrates dataset and training workflows.
+Tags: tags=desktop,sveltekit,tauri
+
+# Desktop Studio Overview
+
+The Tauri + SvelteKit desktop studio orchestrates dataset preparation, embedding
+jobs, and checkpoint conversion tasks by calling into the Python CLI exposed in
+`main.py`. The UI renders forms that mirror the available CLI options for:
+
+- Building JSONL corpora from uploaded documents through
+  `src/qlora/dataset_builder.py`.
+- Submitting embedding batches to an Ollama…
+
+# docs/llms/python-pipeline.md
+Python modules for dataset preparation, embeddings, QLoRA training, and conversion.
+Tags: tags=python,qlora
+
+# Python Pipeline Modules
+
+The Python package under `src/qlora` provides focused utilities for dataset
+preparation, embedding capture, QLoRA training, and model conversion. The key
+modules exposed to the desktop studio and CLI are:
+
+- `dataset_builder.py`
+  - Normalises Markdown, HTML, JSON, JSONL, and plaintext files into `DocumentChunk`
+    objects.
+  - Supports adjustable chunk sizes with…
+
+# docs/llms/configuration-guide.json
+Runtime requirements for TensorRT-LLM, Ollama, and QLoRA exports.
+Tags: tags=configuration,cuda,tensorrt
+
+{
+  "tensorRT": {
+    "pythonVersion": "3.12",
+    "cudaVersion": "12.6",
+    "tensorRtVersion": "9.5",
+    "notes": [
+      "Ensure NVIDIA drivers are aligned with CUDA 12.6 on the host.",
+      "Expose the GPU to WSL2 and verify `nvidia-smi` detects the RTX 3060 Ti.",
+      "Set `CUDA_VISIBLE_DEVICES=0` inside the desktop Tauri shell before launching training."
+    ]
+  },
+  "ollama": {…
+
+# docs/llms/embedding-tasks.jsonl
+Reference tasks that feed RAG ingestion and adapter training workflows.
+Tags: tags=rag,embeddings
+
+{"task": "dataset_chunking", "module": "src/qlora/dataset_builder.py", "description": "Convert uploaded documents into JSONL with chunk metadata."}
+{"task": "ollama_embedding", "module": "src/qlora/ollama_embeddings.py", "description": "Submit dataset rows to Ollama embeddinggemma:latest and persist responses."}
+{"task": "qlora_training", "module": "src/qlora/run_qlora.py", "description": "Launch…

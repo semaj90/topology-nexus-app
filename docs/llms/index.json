@@ -1,0 +1,39 @@
+{
+  "docs": [
+    {
+      "path": "docs/llms/desktop-overview.md",
+      "description": "How the Tauri + SvelteKit desktop orchestrates dataset and training workflows.",
+      "tags": ["desktop", "sveltekit", "tauri"],
+      "profiles": ["default", "typescript", "uno"],
+      "order": 1
+    },
+    {
+      "path": "docs/llms/python-pipeline.md",
+      "description": "Python modules for dataset preparation, embeddings, QLoRA training, and conversion.",
+      "tags": ["python", "qlora"],
+      "profiles": ["default", "typescript"],
+      "order": 2
+    },
+    {
+      "path": "docs/llms/configuration-guide.json",
+      "description": "Runtime requirements for TensorRT-LLM, Ollama, and QLoRA exports.",
+      "tags": ["configuration", "cuda", "tensorrt"],
+      "profiles": ["default", "drizzle"],
+      "order": 3
+    },
+    {
+      "path": "docs/llms/embedding-tasks.jsonl",
+      "description": "Reference tasks that feed RAG ingestion and adapter training workflows.",
+      "tags": ["rag", "embeddings"],
+      "profiles": ["default", "drizzle", "uno"],
+      "order": 4
+    },
+    {
+      "path": "docs/llms/crawled/ts_drizzle_uno.jsonl",
+      "description": "LangExtract-ready documentation corpus for TypeScript, Drizzle ORM, and UnoCSS.",
+      "tags": ["typescript", "drizzle", "unocss", "langextract"],
+      "profiles": ["typescript", "drizzle", "uno"],
+      "order": 5
+    }
+  ]
+}

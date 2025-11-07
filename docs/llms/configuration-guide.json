@@ -1,0 +1,22 @@
+{
+  "tensorRT": {
+    "pythonVersion": "3.12",
+    "cudaVersion": "12.6",
+    "tensorRtVersion": "9.5",
+    "notes": [
+      "Ensure NVIDIA drivers are aligned with CUDA 12.6 on the host.",
+      "Expose the GPU to WSL2 and verify `nvidia-smi` detects the RTX 3060 Ti.",
+      "Set `CUDA_VISIBLE_DEVICES=0` inside the desktop Tauri shell before launching training."
+    ]
+  },
+  "ollama": {
+    "defaultModel": "embeddinggemma:latest",
+    "datasetFormat": "jsonl",
+    "environment": "Ollama must be reachable from the desktop app at http://127.0.0.1:11434"
+  },
+  "qlora": {
+    "baseModelUpload": "Accepts Hugging Face checkpoints or local directories.",
+    "adapterOutput": ["safetensors", "tensorrt-plan"],
+    "datasetBuilder": "Chunk size and overlap parameters map directly onto the Python DatasetBuilder class."
+  }
+}

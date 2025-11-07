@@ -5,6 +5,7 @@ use reqwest::blocking::Client;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -228,6 +229,69 @@ fn embed_texts(texts: Vec<String>, model: String) -> Result<Vec<EmbeddingResult>
     Ok(results)
 }
 
+#[tauri::command]
+fn load_semantic_index() -> Result<Value, String> {
+    let repo_root = find_repo_root().map_err(|e| e.to_string())?;
+    let index_path = repo_root.join("data").join("semantic_index.json");
+    if !index_path.exists() {
+        return Ok(Value::Array(vec![]));
+    }
+
+    let contents = fs::read_to_string(&index_path).map_err(|e| e.to_string())?;
+    let value: Value = serde_json::from_str(&contents).map_err(|e| e.to_string())?;
+    Ok(value)
+}
+
+#[tauri::command]
+fn refresh_semantic_index(dataset: Option<String>) -> Result<usize, String> {
+    let repo_root = find_repo_root().map_err(|e| e.to_string())?;
+    let python = python_executable();
+    let dataset_path = dataset.unwrap_or_else(|| "docs/llms/crawled/ts_drizzle_uno.jsonl".to_string());
+    let dataset_json = serde_json::to_string(&dataset_path).map_err(|e| e.to_string())?;
+
+    let script = format!(
+        r#"
+from pathlib import Path
+from src.semantic.index_builder import build_semantic_index
+
+dataset = Path({dataset})
+if not dataset.is_absolute():
+    dataset = Path.cwd() / dataset
+output_path = Path('data/semantic_index.json')
+output_path.parent.mkdir(parents=True, exist_ok=True)
+count = build_semantic_index(dataset, output_path)
+print(count)
+"#,
+        dataset = dataset_json,
+    );
+
+    let command_output = Command::new(python)
+        .arg("-c")
+        .arg(script)
+        .current_dir(&repo_root)
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if !command_output.status.success() {
+        let stderr = String::from_utf8_lossy(&command_output.stderr);
+        return Err(stderr.trim().to_string());
+    }
+
+    let stdout = String::from_utf8_lossy(&command_output.stdout);
+    let trimmed = stdout.trim();
+    let count: usize = trimmed.parse().map_err(|e| e.to_string())?;
+    Ok(count)
+}
+
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            build_dataset,
+            convert_checkpoint,
+            embed_texts,
+            load_semantic_index,
+            refresh_semantic_index
+        ])
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![build_dataset, convert_checkpoint, embed_texts])

@@ -1,0 +1,101 @@
+# docs/llms/desktop-overview.md
+How the Tauri + SvelteKit desktop orchestrates dataset and training workflows.
+Tags: tags=desktop,sveltekit,tauri
+
+# Desktop Studio Overview
+
+The Tauri + SvelteKit desktop studio orchestrates dataset preparation, embedding
+jobs, and checkpoint conversion tasks by calling into the Python CLI exposed in
+`main.py`. The UI renders forms that mirror the available CLI options for:
+
+- Building JSONL corpora from uploaded documents through
+  `src/qlora/dataset_builder.py`.
+- Submitting embedding batches to an Ollama runtime via
+  `src/qlora/ollama_embeddings.py`.
+- Creating QLoRA adapter specifications and conversion pipelines powered by
+  `src/qlora/training_spec.py`, `src/qlora/run_qlora.py`, and
+  `src/qlora/model_converter.py`.
+
+The desktop route `/` wires these operations together so that a creator can:
+
+1. Select raw `.txt`, `.md`, `.html`, `.json`, or `.jsonl` files for ingestion.
+2. Configure chunking controls and persist the resulting dataset as JSONL.
+3. Forward the saved dataset into Ollama for embedding generation using the
+   `embeddinggemma:latest` model and capture the vector responses.
+4. Generate training specs and adapter plans that point at the dataset and the
+   uploaded base checkpoint. The Python backend handles conversion to
+   TensorRT-LLM `.plan` engines or `.safetensors` weights depending on the
+   chosen export mode.
+
+Each action writes status updates into the UI log to make it easy to copy the
+results for further automation or ingestion into additional pipelines.
+
+# docs/llms/python-pipeline.md
+Python modules for dataset preparation, embeddings, QLoRA training, and conversion.
+Tags: tags=python,qlora
+
+# Python Pipeline Modules
+
+The Python package under `src/qlora` provides focused utilities for dataset
+preparation, embedding capture, QLoRA training, and model conversion. The key
+modules exposed to the desktop studio and CLI are:
+
+- `dataset_builder.py`
+  - Normalises Markdown, HTML, JSON, JSONL, and plaintext files into `DocumentChunk`
+    objects.
+  - Supports adjustable chunk sizes with overlap handling to preserve context.
+  - Writes structured JSONL output enriched with metadata.
+- `ollama_embeddings.py`
+  - Streams JSONL dataset rows to an Ollama endpoint for embedding generation.
+  - Includes helpers for batching requests and persisting the resulting vectors.
+- `training_spec.py`
+  - Produces adapter configuration JSON describing training hyperparameters,
+    dataset references, and hardware expectations (CUDA 12.6 + TensorRT 9.5).
+- `run_qlora.py`
+  - Wraps the Hugging Face QLoRA training loop with environment checks so that
+    WSL2 deployments can surface actionable error messages before invoking
+    PyTorch.
+- `model_converter.py`
+  - Converts trained adapters and base models into `.safetensors` or TensorRT-LLM
+    `.plan` artifacts, ensuring that exported engines reference the generated
+    adapter metadata.
+
+The CLI (see `main.py`) exposes high-level commands that delegate to each module
+so they can be executed programmatically from the desktop UI, from shell scripts,
+or inside automated pipelines.
+
+# docs/llms/configuration-guide.json
+Runtime requirements for TensorRT-LLM, Ollama, and QLoRA exports.
+Tags: tags=configuration,cuda,tensorrt
+
+{
+  "tensorRT": {
+    "pythonVersion": "3.12",
+    "cudaVersion": "12.6",
+    "tensorRtVersion": "9.5",
+    "notes": [
+      "Ensure NVIDIA drivers are aligned with CUDA 12.6 on the host.",
+      "Expose the GPU to WSL2 and verify `nvidia-smi` detects the RTX 3060 Ti.",
+      "Set `CUDA_VISIBLE_DEVICES=0` inside the desktop Tauri shell before launching training."
+    ]
+  },
+  "ollama": {
+    "defaultModel": "embeddinggemma:latest",
+    "datasetFormat": "jsonl",
+    "environment": "Ollama must be reachable from the desktop app at http://127.0.0.1:11434"
+  },
+  "qlora": {
+    "baseModelUpload": "Accepts Hugging Face checkpoints or local directories.",
+    "adapterOutput": ["safetensors", "tensorrt-plan"],
+    "datasetBuilder": "Chunk size and overlap parameters map directly onto the Python DatasetBuilder class."
+  }
+}
+
+# docs/llms/embedding-tasks.jsonl
+Reference tasks that feed RAG ingestion and adapter training workflows.
+Tags: tags=rag,embeddings
+
+{"task": "dataset_chunking", "module": "src/qlora/dataset_builder.py", "description": "Convert uploaded documents into JSONL with chunk metadata."}
+{"task": "ollama_embedding", "module": "src/qlora/ollama_embeddings.py", "description": "Submit dataset rows to Ollama embeddinggemma:latest and persist responses."}
+{"task": "qlora_training", "module": "src/qlora/run_qlora.py", "description": "Launch adapter fine-tuning using generated training specifications."}
+{"task": "model_conversion", "module": "src/qlora/model_converter.py", "description": "Convert adapters and checkpoints into TensorRT-LLM .plan engines or safetensors."}

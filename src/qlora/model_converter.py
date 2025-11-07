@@ -10,6 +10,11 @@ import importlib.util
 import json
 import logging
 
+try:  # pragma: no cover - optional dependency
+    import torch
+except Exception:  # pragma: no cover
+    torch = None  # type: ignore
+
 import torch
 from safetensors.torch import save_file as save_safetensors
 
@@ -39,6 +44,8 @@ def convert_checkpoint_to_safetensors(checkpoint_path: Path, output_path: Path) 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     logger.info("Loading checkpoint from %s", checkpoint_path)
+    if torch is None:
+        raise RuntimeError("PyTorch is required to convert checkpoints to safetensors")
     state_dict = torch.load(checkpoint_path, map_location="cpu")
     if not isinstance(state_dict, dict):
         raise ValueError("Expected a state_dict dictionary in the checkpoint")
