@@ -27,6 +27,13 @@
       "tags": ["rag", "embeddings"],
       "profiles": ["default", "drizzle", "uno"],
       "order": 4
+    },
+    {
+      "path": "docs/llms/crawled/ts_drizzle_uno.jsonl",
+      "description": "LangExtract-ready documentation corpus for TypeScript, Drizzle ORM, and UnoCSS.",
+      "tags": ["typescript", "drizzle", "unocss", "langextract"],
+      "profiles": ["typescript", "drizzle", "uno"],
+      "order": 5
     }
   ]
 }

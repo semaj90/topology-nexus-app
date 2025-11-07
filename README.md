@@ -6,6 +6,8 @@ A comprehensive platform for contextual engineering that fetches webpages, parse
 
 - **Web Scraping & Parsing**: Fetches webpages and converts them to structured JSON/JSONL format
 - **Semantic Processing**: Uses LangChain and semantic splitting for intelligent text understanding
+- **LangExtract Documentation Pipeline**: Crawls TypeScript, Drizzle ORM, and UnoCSS sources into JSON/JSONL corpora with
+  automatic chunking and metadata tagging
 - **QLoRA Modules**: Memory-efficient loading/unloading of distilled modules based on user queries
 - **Desktop Studio**: Cross-platform SvelteKit + Tauri desktop application for dataset curation, embedding generation, and TensorRT conversions
 - **Interactive Studio**: Testing environment for features and mini-dataset creation
@@ -121,6 +123,16 @@ python main.py qlora-spec meta-llama/Llama-3-8b data/my_dataset.jsonl artifacts/
 ### 6. Convert Checkpoints to TensorRT Engines
 ```bash
 python main.py convert checkpoints/lora_adapter.pt artifacts/engine --config config/tensorrt_llm_environment.json
+```
+
+### 7. Crawl Documentation with LangExtract
+```bash
+python main.py crawl-docs --output-dir docs/llms/crawled
+```
+
+### 8. Build a Fuse.js Semantic Index
+```bash
+python main.py semantic-index docs/llms/crawled/ts_drizzle_uno.jsonl --output data/semantic_index.json
 ```
 
 ### 4. Train a Topology

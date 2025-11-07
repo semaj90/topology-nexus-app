@@ -2,7 +2,12 @@ from pathlib import Path
 import json
 import sys
 
-import torch
+import pytest
+
+try:
+    import torch
+except Exception:  # pragma: no cover - torch optional in CI
+    torch = None
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -12,6 +17,7 @@ if str(SRC) not in sys.path:
 from qlora.model_converter import convert_checkpoint_to_safetensors, build_tensorrt_engine
 
 
+@pytest.mark.skipif(torch is None, reason="torch not available in test environment")
 def test_convert_checkpoint_to_safetensors(tmp_path: Path):
     checkpoint = tmp_path / "model.pt"
     state_dict = {"linear.weight": torch.randn(2, 2)}

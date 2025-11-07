@@ -16,6 +16,11 @@ from typing import List, Dict
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.scraper.web_scraper import WebScraper
+from src.scraper.langextract_pipeline import (
+    DEFAULT_TOPIC_CONFIGS,
+    DocumentationCrawler,
+)
+from src.semantic.index_builder import build_semantic_index
 from src.semantic.text_processor import process_webpage_data
 from src.trainer.topology_trainer import TopologyTrainer, DEFAULT_TOPOLOGIES
 from src.studio.studio import TopologyNexusStudio
@@ -176,6 +181,15 @@ def main():
     demo_parser = subparsers.add_parser('demo', help='Run complete demo pipeline')
     demo_parser.add_argument('urls', nargs='+', help='URLs for demo')
 
+    crawl_parser = subparsers.add_parser('crawl-docs', help='Crawl documentation topics with LangExtract')
+    crawl_parser.add_argument('--output-dir', default='docs/llms/crawled', help='Directory for documentation corpus outputs')
+    crawl_parser.add_argument('--topics', nargs='*', help='Subset of topics to crawl (defaults to all)')
+
+    index_parser = subparsers.add_parser('semantic-index', help='Build Fuse.js semantic index from a dataset')
+    index_parser.add_argument('dataset', help='Input JSON/JSONL dataset path')
+    index_parser.add_argument('--output', default='data/semantic_index.json', help='Output JSON file for the Fuse.js index')
+    index_parser.add_argument('--qdrant-url', help='Optional Qdrant endpoint for vector storage')
+
     dataset_parser = subparsers.add_parser('dataset', help='Build a JSONL dataset from local documents')
     dataset_parser.add_argument('output', help='Output JSONL file')
     dataset_parser.add_argument('inputs', nargs='+', help='Input document paths (.txt/.md/.html/.json/.jsonl)')
@@ -220,6 +234,25 @@ def main():
             output = builder.build_jsonl([Path(p) for p in args.inputs], Path(args.output))
             print(f"Dataset written to {output}")
 
+        elif args.command == 'crawl-docs':
+            output_dir = Path(args.output_dir)
+            selected_topics = DEFAULT_TOPIC_CONFIGS
+            if args.topics:
+                requested = {topic.lower() for topic in args.topics}
+                selected_topics = [cfg for cfg in DEFAULT_TOPIC_CONFIGS if cfg.topic.lower() in requested]
+                missing = requested - {cfg.topic.lower() for cfg in selected_topics}
+                if missing:
+                    logger.warning("Unknown topics requested: %s", ", ".join(sorted(missing)))
+                if not selected_topics:
+                    logger.error(
+                        "No valid topics selected. Available: %s",
+                        ", ".join(cfg.topic for cfg in DEFAULT_TOPIC_CONFIGS),
+                    )
+                    return
+
+            crawler = DocumentationCrawler()
+            crawler.crawl_topics(selected_topics, output_dir)
+
         elif args.command == 'convert':
             summary = convert_model_pipeline(Path(args.checkpoint), Path(args.output_dir), config_path=Path(args.config) if args.config else None)
             print(f"Safetensors: {summary.safetensors_path}")
@@ -227,6 +260,10 @@ def main():
                 print(f"TensorRT engine: {summary.engine_plan_path}")
             if summary.notes:
                 print(json.dumps(summary.notes, indent=2))
+
+        elif args.command == 'semantic-index':
+            count = build_semantic_index(args.dataset, args.output, qdrant_url=args.qdrant_url)
+            logger.info("Generated semantic index with %s records", count)
 
         elif args.command == 'qlora-spec':
             output_dir = Path(args.output_dir)
