@@ -15,6 +15,7 @@ try:  # pragma: no cover - optional dependency
 except Exception:  # pragma: no cover
     torch = None  # type: ignore
 
+import torch
 from safetensors.torch import save_file as save_safetensors
 
 

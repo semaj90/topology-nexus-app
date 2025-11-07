@@ -292,6 +292,9 @@ fn main() {
             load_semantic_index,
             refresh_semantic_index
         ])
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![build_dataset, convert_checkpoint, embed_texts])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

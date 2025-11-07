@@ -8,6 +8,7 @@ try:
     import torch
 except Exception:  # pragma: no cover - torch optional in CI
     torch = None
+import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"

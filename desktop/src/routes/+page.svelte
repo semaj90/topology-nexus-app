@@ -10,6 +10,9 @@
   } from '$lib/api';
   import { initialiseSemanticIndex, runSemanticSearch, semanticIndexStore } from '$lib/search';
   import { onDestroy, onMount } from 'svelte';
+    type ConversionSummary,
+    type EmbeddingResult
+  } from '$lib/api';
 
   let datasetInputs: FileList | null = null;
   let datasetOutput = '';
